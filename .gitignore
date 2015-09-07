@@ -1,0 +1,10 @@
+# for project specific configs
+cred.py
+config.py
+
+# python stuff
+*.pyc
+__pycache__
+
+# editor stuff
+.ropeproject
