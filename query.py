@@ -79,11 +79,4 @@ def filter_pulls(repo, pulls, assigned=None, state='open', labels=None):
         ]):
             filtered.append(pull)
 
-    final = []
-
-    for index, pull in enumerate(filtered):
-        for issue_filter in issue_filters:
-            if issue_filter(pull):
-                final.append(pull)
-
-    return final
+    return filtered
