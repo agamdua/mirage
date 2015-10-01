@@ -1,3 +1,21 @@
+"""
+Design notes & future API changes
+=================================
+
+This is an incredibly clever module. There may or may not be pride while
+writing that little confession.
+
+These functions are independent of a class right now, this is to eliminate
+dependency of the functionality on the ``repo`` object.
+
+At the moment though, we still use the ``repo`` object, and it will be changed
+once the switch to ``github3.py>=1.0.0``  is complete. In the meanwhile,
+expect the API to change rapidly without any concern for anything dependent
+on this code.
+"""
+from functools import partial
+
+
 def filter_by_label(label_names=None):
     """Returns a list of callables that can be applied as label filters
 
@@ -18,24 +36,60 @@ def filter_by_label(label_names=None):
 
     label_filters = []
 
+    def not_label(x, label):
+        return x.name != label.split('!')[-1]
+
+    def has_label(x, label):
+        return x.name == label
+
     for label in label_names:
         if label.startswith('!'):
-            label_filters.append(lambda x: x.name != label)
+            fn = partial(not_label, label=label)
+            fn.__name__ = "not_label_{}".format(label.split('!')[-1])
         else:
-            label_filters.append(lambda x: x.name == label)
+            fn = partial(has_label, label=label)
+            fn.__name__ = "has_label_{}".format(label)
+
+        fn.__doc__ = "filter for {}".format(label)
+        label_filters.append(fn)
 
     return label_filters
 
 
-def satisfies(iterfunc, iterable):
-    # if both lists are empty its a no-op and we return true
-    if [] == iterable == iterfunc:
+def actually_filter_by_labels(iterfunc, iterable):
+    if [] == iterfunc or [] == iterable == iterfunc:
         return True
 
-    # even one match is sufficient
-    return any(
-        func(item) for item in iterable for func in iterfunc
-    )
+    import mock
+    if not iterable:
+        # yeah, this just happened.
+        iterable = [mock.Mock()]
+
+    decided = []
+
+    for fn in iterfunc:
+        decider = all if fn.__name__.startswith('not_') else any
+        decided.append(decider(map(fn, iterable)))
+
+    return all(decided)
+
+
+def satisfies(iterfunc, iterable):
+    # if both lists are empty its a no-op and we return true
+    if [] == iterfunc or [] == iterable == iterfunc:
+        return True
+
+    import mock
+    if not iterable:
+        # TODO: yeah, this just happened.
+        iterable = [mock.Mock()]
+
+    decided = []
+    for fn in iterfunc:
+        decider = all if fn.__name__.startswith('not_') else any
+        decided.append(decider(map(fn, iterable)))
+
+    return all(decided)
 
 
 def filter_pulls(repo, pulls, assigned=None, state='open', labels=None):
@@ -79,4 +133,6 @@ def filter_pulls(repo, pulls, assigned=None, state='open', labels=None):
         ]):
             filtered.append(pull)
 
+    # TODO: do we want to actually yield here; can actually reuse the github3.py
+    # iterator for pull requests
     return filtered

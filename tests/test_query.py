@@ -19,7 +19,7 @@ except ImportError:
         " '<organization>/<reponame>' in a file called cred.py in the mirage"
         " project. No one said its production ready yo ;)\n"
         "You should also know that the github looks to auth with my username"
-        ": thats pretty silly IMO. I want to sleep for now though."
+        ": thats pretty silly IMO, but thats how it is for now."
     )
 
 repo = Repo('agamdua', "{}/{}".format(ORG, REPO))
