@@ -1,17 +1,24 @@
+from __future__ import absolute_import
+
 from collections import Counter
 
 import github3 as github
 
-from cred import GHEPW
-from config import *  # noqa
+from .cred import GHEPW, PW
+from .config import *  # noqa
 
 
 class Repo(object):
-    def __init__(self, username):
+    def __init__(self, username, repo):
+        """
+        Args:
+            username (str): 'username'
+            repo (str): in the format of '<organization>/<repo>'
+        """
         self.gh = github.GitHubEnterprise(GHE)
+        # self.gh = github.login(username, PW)
         self.user = self.gh.login(username, GHEPW)
-        self.repo = self.gh.repository(ORG, REPO)
-        self.pulls = self.repo.iter_pulls()
+        self.repo = self.gh.repository(*repo.split('/'))
 
     def get_issue_for_pull(self, pull):
         """Pass in the pull request **object**
@@ -115,13 +122,3 @@ class Repo(object):
             self.get_issue_for_pull(pull).assign(
                 self.get_person_with_bad_luck_l2(level).login
             )
-
-repo = Repo(username='agamdua')
-
-repo.assign_things()
-
-
-# print "assignment count for L2: {}".format(repo.get_assigned_count_l2())
-# print "assignment count for others: {}".format(repo.get_assigned_count_l1())
-# print "Next L2 assignment should go to {}".format(repo.get_person_with_bad_luck_l2('L2'))
-# print "Next L1 assignment should go to {}".format(repo.get_person_with_bad_luck_l1('!L2'))

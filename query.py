@@ -3,12 +3,19 @@ def filter_by_label(label_names=None):
 
     Supports (limited) querying.
 
+    Returns:
+        - [] if label_names is None
+        - list of label filters as callables
+
     Example:
         label_names = ['mylabel', '!not-my-label']
 
         will get the pull requests with `mylabel`, but not the ones
         with `not-my-label`
     """
+    if label_names is None:
+        return []
+
     label_filters = []
 
     for label in label_names:
@@ -20,7 +27,18 @@ def filter_by_label(label_names=None):
     return label_filters
 
 
-def filter_pulls(pulls, assigned=None, state='open', labels=None):
+def satisfies(iterfunc, iterable):
+    # if both lists are empty its a no-op and we return true
+    if [] == iterable == iterfunc:
+        return True
+
+    # even one match is sufficient
+    return any(
+        func(item) for item in iterable for func in iterfunc
+    )
+
+
+def filter_pulls(repo, pulls, assigned=None, state='open', labels=None):
     """
     Returns a list based on filters
 
@@ -49,18 +67,17 @@ def filter_pulls(pulls, assigned=None, state='open', labels=None):
             "Feel free to contribute to github.com/agamdua/mirage!"
         )
 
-    if labels:
+    if labels is not None:
         label_filters = filter_by_label(labels)
+    else:
+        label_filters = []
 
     for pull in pulls:
-
-
-    # TODO: need to confirm this works with all filters
-    for pull in pulls:
-        for label_filter in label_filters:
-            if filter(label_filter, pull.issue().iter_labels()):
-                continue
-        filtered.append(pull)
+        if all([
+            satisfies(label_filters, repo.repo.issue(pull.number).labels),
+            satisfies(issue_filters, [pull])
+        ]):
+            filtered.append(pull)
 
     final = []
 
