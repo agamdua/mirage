@@ -27,7 +27,7 @@ class Repo(object):
 
 def get_reviewer_workload(pulls, reviewers):
     reviewer_workload = Counter(
-        pull.assignee.login for pull in pulls
+        pull.assignee.login for pull in pulls if pull.assignee.login in reviewers  # noqa
     )
     reviewer_workload.update({person: 0 for person in reviewers})
 
