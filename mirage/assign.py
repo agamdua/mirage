@@ -56,10 +56,11 @@ def display_pull_stats(reviewers, reviewer_workload):
         )
         total += workload
 
-    table_data.append(['=====================', '=='])
     table_data.append(['TOTAL: ', six.text_type(total)])
 
     table = AsciiTable(table_data)
+    table.inner_footing_row_border = True
+    table.justify_columns = {1: 'center'}
     print(table.table)
 
 
